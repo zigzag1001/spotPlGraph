@@ -7,4 +7,4 @@ headers = getAccessToken()
 filename = getPlTracksFeatures(headers)
 
 with open(filename, 'r') as f:
-	drawScatterPlot(f.read())
+	drawScatterPlot(f.read(), headers)

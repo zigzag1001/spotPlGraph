@@ -1,10 +1,9 @@
 '''Retrieves the playlists of a Spotify user, selects a
-specific playlist (excluding "Discover Weekly"),
-retrieves the tracks of the selected playlist and their
-audio features, and stores them in a dictionary. If the 
-selected playlist has not been previously saved, the 
-function saves the dictionary as a JSON file in a specific 
-directory and returns the filename.'''
+specific playlist, retrieves the tracks of the selected 
+playlist and their audio features, and stores them in a 
+dictionary. If the selected playlist has not been 
+previously saved, the function saves the dictionary as 
+a JSON file in a specific directory and returns the filename.'''
 
 # Import necessary libraries
 import requests
@@ -70,17 +69,23 @@ def getPlTracksFeatures(headers):
 			requested2 = requests.get(full_request2["next"], headers=headers).text
 			full_request2 = json.loads(requested2)
 
-		audio_features_url = "https://api.spotify.com/v1/audio-features/"
 
-		tracks_features_dictionary = {}
-
+		audio_features_url = "https://api.spotify.com/v1/audio-features"
 		tracks_features_list = {'items': []}
 
-		# Loop through the tracks and get their audio features
-		for song_id in tracks_dictionary.values():
-			requested3 = requests.get(audio_features_url + song_id, headers=headers).text
-			full_request3 = json.loads(requested3)
-			tracks_features_list['items'].append(full_request3)
+		# Break up playlist into chunks of 100 because of Spotify limit
+		tracks = list(tracks_dictionary.values())
+		for i in range(0, len(tracks), 100):
+			chunk = tracks[i:i+100]
+			tracks_str = ','.join(chunk)
+
+			req_url = audio_features_url + "?ids=" + tracks_str
+		
+			request3 = requests.get(req_url, headers=headers).text
+			full_request3 = json.loads(request3)
+
+			for track in full_request3['audio_features']:
+				tracks_features_list['items'].append(track)
 
 		# Write the audio features to a file
 		with open(directory + filename, 'w') as f:

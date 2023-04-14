@@ -23,9 +23,13 @@ def getPlTracksFeatures(headers):
 	full_request = json.loads(requested)
 
 	selected_playlist = ''
-	playlist_names_list = []
+	playlist_names_list = ['custom playlist (select to input URL)']
 	playlist_name = ''
 	i = 0
+
+	print(i, playlist_names_list[0])
+
+	i += 1
 
 	# Iterate through each playlist and add its name to the list
 	for item in full_request["items"]:
@@ -43,16 +47,31 @@ def getPlTracksFeatures(headers):
 		elif playlist_name in playlist_names_list:
 			break
 
+	custom = False
+	if playlist_name == 'custom playlist (select to input URL)':
+		custom = True
+		custom_input = input('Input playlist URL: ').strip()
+		if len(custom_input) == 22:
+			playlist_name = custom_input
+		elif 'spotify' in custom_input and 'playlist' in custom_input:
+			playlist_name = custom_input[-22:]
+		else:
+			print('Input is not a valid playlist URL or ID')
+			return
+
 	print('\nLoading...\n')
 	filename = playlist_name.replace(' ', '_')
 	directory = './playlists/'
 
 	if not os.path.isfile(os.path.join(directory, filename)):
 		# Find the selected playlist and get its tracks URL
-		for item in full_request["items"]:
-			if item["name"] == playlist_name:
-				selected_playlist = item["tracks"]["href"]
-				break
+		if custom:
+			selected_playlist = f"https://api.spotify.com/v1/playlists/{playlist_name}/tracks"
+		else:
+			for item in full_request["items"]:
+				if item["name"] == playlist_name:
+					selected_playlist = item["tracks"]["href"]
+					break
 
 		# Send request to get the tracks for the selected playlist and parse response as JSON
 		requested2 = requests.get(selected_playlist, headers=headers).text

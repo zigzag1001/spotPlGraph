@@ -51,6 +51,13 @@ def drawScatterPlot(songData, headers):
 	for item in songDataRead['items']:
 		x_val = item[featureX]
 		y_val = item[featureY]
+
+		# Check if feature is miliseconds, if so divide to minutes
+		if featureX == 'duration_ms':
+			x_val = round(x_val/60000,1)
+		elif featureY == 'duration_ms':
+			y_val = round(y_val/60000,1)
+
 		data_dict[item['id']] = [x_val, y_val]
 
 		# Update highest and lowest values for feature X
@@ -69,13 +76,19 @@ def drawScatterPlot(songData, headers):
 			lowest_value_y = y_val
 			lowest_id_y = item['id']
 
+	# Update name to be accureate to converted miliseconds
+	if featureX == 'duration_ms':
+		featureX = 'duration minutes'
+	if featureY == 'duration_ms':
+		featureY = 'duration minutes'
+
 	# Print highest and lowest values for feature X and Y
 	print(f"Highest {featureX} \n  {getName(highest_id_x, headers)}\n  https://open.spotify.com/track/{highest_id_x} \n  value: {highest_value_x}")
 	print(f"Lowest {featureX} \n  {getName(lowest_id_x, headers)}\n  https://open.spotify.com/track/{lowest_id_x} \n  value: {lowest_value_x}")
 	print(f"Highest {featureY} \n  {getName(highest_id_y, headers)}\n  https://open.spotify.com/track/{highest_id_y} \n  value: {highest_value_y}")
 	print(f"Lowest {featureY} \n  {getName(lowest_id_y, headers)}\n  https://open.spotify.com/track/{lowest_id_y} \n  value: {lowest_value_y}")
 
-
+	# Load values into seperate arrays
 	x_values = [v[0] for v in data_dict.values()]
 	y_values = [v[1] for v in data_dict.values()]
 
@@ -89,12 +102,14 @@ def drawScatterPlot(songData, headers):
 	max_color = 'red'
 	min_color = 'green'
 
+	# Initiate plot
 	fig, ax = plt.subplots()
 	points = ax.scatter(x_values, y_values)
 
+	# Hover text
 	mplcursors.cursor(points, hover=True).connect("add", lambda sel: sel.annotation.set_text(f"{getName(list(data_dict.keys())[sel.index], headers)}\n{featureX}: {x_values[sel.index]}\n{featureY}: {y_values[sel.index]}"))
 
-
+	# Color max and min values
 	for i in range(len(x_values)):
 		if y_values[i] == max_y or x_values[i] == max_x:
 			ax.scatter(x_values[i], y_values[i], color=max_color)
